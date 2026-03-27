@@ -1,0 +1,11 @@
+{
+  "name": "retail-shopping-monorepo",
+  "private": true,
+  "workspaces": [
+    "bff",
+    "mobile"
+  ],
+  "scripts": {
+    "test": "npm run test --workspace=bff && npm run test --workspace=mobile"
+  }
+}
