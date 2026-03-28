@@ -1,17 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { ShopSessionProvider } from './src/context/ShopSessionContext';
+import { AppNavigator } from './src/navigation/AppNavigator';
 
-/** Placeholder until navigation and session wiring land in a later commit. */
-export default function App() {
+export default function App(): React.ReactElement {
   return (
-    <View style={styles.box}>
-      <Text style={styles.title}>Retail cart</Text>
+    <ShopSessionProvider>
+      <AppNavigator />
       <StatusBar style="dark" />
-    </View>
+    </ShopSessionProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  box: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  title: { fontSize: 18, fontWeight: '600' },
-});
