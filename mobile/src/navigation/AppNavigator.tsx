@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { Text } from 'react-native';
+import { Text } from '../lib/rn';
 import { useShopSession } from '../context/ShopSessionContext';
 import { CartScreen } from '../screens/CartScreen';
 import { CheckoutScreen } from '../screens/CheckoutScreen';
@@ -15,10 +15,17 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 function CartBadgeTitle({ title }: { title: string }) {
   const { cart } = useShopSession();
   const n = cart?.lines.reduce((s, l) => s + l.quantity, 0) ?? 0;
+  const suffix = n > 0 ? ` (${n})` : '';
+  const a11yLabel =
+    n > 0 ? `${title}, ${n} ${n === 1 ? 'item' : 'items'}` : title;
   return (
-    <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text }}>
+    <Text
+      accessibilityRole="header"
+      accessibilityLabel={a11yLabel}
+      style={{ fontSize: 17, fontWeight: '700', color: colors.text }}
+    >
       {title}
-      {n > 0 ? ` (${n})` : ''}
+      {suffix}
     </Text>
   );
 }

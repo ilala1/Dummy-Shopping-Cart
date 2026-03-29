@@ -1,5 +1,11 @@
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  View,
+  type ListRenderItemInfo,
+} from '../../lib/rn';
 import type { ProductListItem } from '../../api/types';
 import { space } from '../../theme/tokens';
 import { AppText } from '../atoms/AppText';
@@ -35,8 +41,13 @@ export function ProductCatalogList({
 
   return (
     <View style={styles.fill}>
-      <SectionHeader title="Shop" />
+      <SectionHeader
+        title="Shop"
+        accessibilityHint="Browse products to add to your cart."
+      />
       <FlatList
+        accessibilityLabel="Product list"
+        accessibilityHint="Pull down to refresh availability and prices."
         data={products}
         keyExtractor={(item: ProductListItem) => item.id}
         refreshControl={
@@ -44,7 +55,13 @@ export function ProductCatalogList({
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <AppText variant="caption">No products available.</AppText>
+          <AppText
+            variant="caption"
+            accessibilityRole="text"
+            accessibilityLabel="No products available."
+          >
+            No products available.
+          </AppText>
         }
         renderItem={({ item }: ListRenderItemInfo<ProductListItem>) => (
           <ProductListRow product={item} onPress={() => onSelect(item)} />

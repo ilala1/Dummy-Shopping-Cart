@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TextProps } from 'react-native';
+import type { TextProps } from '../../lib/rn';
 import { formatCents } from '../../lib/money';
 import { AppText, type AppTextProps } from './AppText';
 
@@ -12,9 +12,15 @@ export function MoneyText({
   variant = 'body',
   ...rest
 }: MoneyTextProps): React.ReactElement {
+  const formatted = formatCents(cents);
   return (
-    <AppText variant={variant} {...(rest as TextProps)}>
-      {formatCents(cents)}
+    <AppText
+      variant={variant}
+      accessibilityRole="text"
+      accessibilityLabel={formatted}
+      {...(rest as TextProps)}
+    >
+      {formatted}
     </AppText>
   );
 }

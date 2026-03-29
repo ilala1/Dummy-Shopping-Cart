@@ -5,7 +5,7 @@ import {
   StyleSheet,
   type PressableProps,
   type PressableStateCallbackType,
-} from 'react-native';
+} from '../../lib/rn';
 import { colors, radius } from '../../theme/tokens';
 import { AppText } from './AppText';
 
@@ -21,6 +21,9 @@ export function PrimaryButton({
   disabled,
   variant = 'primary',
   style,
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityState: a11yState,
   ...rest
 }: PrimaryButtonProps): React.ReactElement {
   const isDisabled = disabled || loading;
@@ -35,6 +38,13 @@ export function PrimaryButton({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? title}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{
+        disabled: isDisabled,
+        busy: !!loading,
+        ...a11yState,
+      }}
       disabled={isDisabled}
       style={(s: PressableStateCallbackType) => [
         styles.btn,
@@ -47,7 +57,11 @@ export function PrimaryButton({
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={colors.primaryText} />
+        <ActivityIndicator
+          color={colors.primaryText}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       ) : (
         <AppText style={styles.label}>{title}</AppText>
       )}

@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from '../lib/rn';
 import type { CheckoutSuccess } from '../api/types';
 import { BffApiError } from '../api/bffClient';
 import { ScreenContainer } from '../components/atoms/ScreenContainer';
@@ -24,7 +24,10 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
   if (done) {
     return (
       <ScreenContainer scroll>
-        <SectionHeader title="Order placed" />
+        <SectionHeader
+          title="Order placed"
+          accessibilityHint="Confirmation of your completed order."
+        />
         <AppText variant="caption" style={styles.orderMeta}>
           Order ID: {done.orderId}
         </AppText>
@@ -74,7 +77,10 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
 
   return (
     <ScreenContainer scroll>
-      <SectionHeader title="Checkout" />
+      <SectionHeader
+        title="Checkout"
+        accessibilityHint="Review total and place your simulated order."
+      />
       {error ? (
         <ErrorCallout message={error} onDismiss={() => setError(null)} />
       ) : null}
@@ -96,6 +102,7 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
       )}
       <PrimaryButton
         title="Place order"
+        accessibilityHint="Submits the order using your current cart."
         loading={busy}
         disabled={!canSubmit || busy}
         onPress={async () => {

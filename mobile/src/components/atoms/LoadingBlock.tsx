@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from '../../lib/rn';
 import { colors } from '../../theme/tokens';
 import { AppText } from './AppText';
 
@@ -9,7 +9,12 @@ export function LoadingBlock({
   message?: string;
 }): React.ReactElement {
   return (
-    <View style={styles.wrap} accessibilityLabel={message}>
+    <View
+      style={styles.wrap}
+      accessibilityLabel={message}
+      accessibilityHint="Please wait while content loads."
+      accessibilityLiveRegion="polite"
+    >
       <ActivityIndicator size="large" color={colors.primary} />
       <AppText variant="caption" style={styles.msg}>
         {message}

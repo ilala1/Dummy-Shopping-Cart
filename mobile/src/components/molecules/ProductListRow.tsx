@@ -1,6 +1,12 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type PressableStateCallbackType,
+} from '../../lib/rn';
 import type { ProductListItem } from '../../api/types';
+import { formatCents } from '../../lib/money';
 import { colors, radius, space } from '../../theme/tokens';
 import { AppText } from '../atoms/AppText';
 import { MoneyText } from '../atoms/MoneyText';
@@ -21,7 +27,8 @@ export function ProductListRow({
         s.pressed && styles.pressed,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`${product.name}, ${product.priceCents} cents`}
+      accessibilityLabel={`${product.name}, ${formatCents(product.priceCents)}`}
+      accessibilityHint="Opens full product details and add to cart."
     >
       <View style={styles.top}>
         <AppText variant="subtitle" numberOfLines={2} style={styles.name}>

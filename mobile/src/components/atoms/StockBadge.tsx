@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from '../../lib/rn';
 import { colors, radius, space } from '../../theme/tokens';
 import { AppText } from './AppText';
 
@@ -16,6 +16,12 @@ export function StockBadge({
       : low
         ? `${available} left`
         : 'In stock';
+  const hint =
+    available <= 0
+      ? 'This item cannot be added to your cart until stock is available.'
+      : low
+        ? 'Low stock. Order soon if you need this item.'
+        : 'Enough units available to add to your cart.';
   return (
     <View
       style={[
@@ -24,6 +30,7 @@ export function StockBadge({
         low && available > 0 ? styles.low : null,
       ]}
       accessibilityLabel={`Stock: ${label}`}
+      accessibilityHint={hint}
     >
       <AppText
         variant="caption"

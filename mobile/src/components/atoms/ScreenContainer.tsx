@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, type ViewProps } from 'react-native';
+import { ScrollView, StyleSheet, View, type ViewProps } from '../../lib/rn';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, space } from '../../theme/tokens';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from '../../lib/rn';
 import { colors } from '../../theme/tokens';
 
 type Variant = 'title' | 'subtitle' | 'body' | 'caption' | 'error';

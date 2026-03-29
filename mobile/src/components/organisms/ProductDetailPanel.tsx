@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from '../../lib/rn';
 import type { ProductDetail } from '../../api/types';
 import { space } from '../../theme/tokens';
 import { PrimaryButton } from '../atoms/PrimaryButton';
@@ -43,7 +43,10 @@ export function ProductDetailPanel({
       {error ? (
         <ErrorCallout message={error} onDismiss={onClearError} />
       ) : null}
-      <SectionHeader title={product.name} />
+      <SectionHeader
+        title={product.name}
+        accessibilityHint="Name of the product you are viewing."
+      />
       <MoneyText cents={product.priceCents} variant="title" />
       <View style={styles.gap}>
         <StockBadge available={product.availableStock} />
@@ -52,19 +55,30 @@ export function ProductDetailPanel({
         {product.description}
       </AppText>
       {max <= 0 ? (
-        <AppText variant="caption">This item cannot be added right now.</AppText>
+        <AppText
+          variant="caption"
+          accessibilityRole="text"
+          accessibilityLabel="This item cannot be added right now."
+        >
+          This item cannot be added right now.
+        </AppText>
       ) : (
         <>
-          <SectionHeader title="Quantity" />
+          <SectionHeader
+            title="Quantity"
+            accessibilityHint="Adjust how many units to add using the minus and plus buttons."
+          />
           <QuantityStepper
             value={effectiveQty}
             min={1}
             max={max}
             onChange={(n) => setQty(n)}
             disabled={busy}
+            a11yItemName={product.name}
           />
           <PrimaryButton
             title="Add to cart"
+            accessibilityHint="Adds the selected quantity of this product to your shopping cart."
             loading={busy}
             disabled={busy || max <= 0}
             onPress={async () => {

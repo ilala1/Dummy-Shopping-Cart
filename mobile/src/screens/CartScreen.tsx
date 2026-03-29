@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { View } from 'react-native';
+import { View } from '../lib/rn';
 import { api, BffApiError } from '../api/bffClient';
 import type { ProductListItem } from '../api/types';
 import { ScreenContainer } from '../components/atoms/ScreenContainer';

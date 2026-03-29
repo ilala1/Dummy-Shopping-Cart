@@ -1,5 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  View,
+  type PressableStateCallbackType,
+} from '../../lib/rn';
 import type { CartLine } from '../../api/types';
 import { colors, radius, space } from '../../theme/tokens';
 import { AppText } from '../atoms/AppText';
@@ -34,10 +39,12 @@ export function CartLineRow({
           max={maxQty}
           onChange={onChangeQty}
           disabled={busy}
+          a11yItemName={line.name}
         />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Remove ${line.name} from cart`}
+          accessibilityHint="Removes this product line from your shopping cart."
           onPress={onRemove}
           disabled={busy}
           style={(s: PressableStateCallbackType) => [

@@ -1,7 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useCallback, useLayoutEffect, useState } from 'react';
-import { Pressable } from 'react-native';
+import { Pressable } from '../lib/rn';
 import { api, BffApiError } from '../api/bffClient';
 import type { ProductListItem } from '../api/types';
 import { ProductCatalogList } from '../components/organisms/ProductCatalogList';
@@ -20,6 +20,7 @@ export function ProductListScreen({ navigation }: Props): React.ReactElement {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open cart"
+          accessibilityHint="Shows items in your shopping cart."
           onPress={() => navigation.navigate('Cart')}
           style={{ paddingHorizontal: 12, paddingVertical: 8 }}
         >

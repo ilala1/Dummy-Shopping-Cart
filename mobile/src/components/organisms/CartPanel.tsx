@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from '../../lib/rn';
 import type { CartSnapshot, ProductListItem } from '../../api/types';
 import { formatCents } from '../../lib/money';
 import { colors, space } from '../../theme/tokens';
@@ -42,16 +42,28 @@ export function CartPanel({
 
   if (!cart || cart.lines.length === 0) {
     return (
-      <View style={styles.empty}>
-        <AppText variant="body">Your cart is empty.</AppText>
-        <AppText variant="caption">Add products from the catalogue.</AppText>
+      <View
+        style={styles.empty}
+        accessible
+        accessibilityRole="text"
+        accessibilityLabel="Your cart is empty. Add products from the catalogue."
+      >
+        <AppText variant="body" importantForAccessibility="no">
+          Your cart is empty.
+        </AppText>
+        <AppText variant="caption" importantForAccessibility="no">
+          Add products from the catalogue.
+        </AppText>
       </View>
     );
   }
 
   return (
     <View style={styles.wrap}>
-      <SectionHeader title="Cart" />
+      <SectionHeader
+        title="Cart"
+        accessibilityHint="Items you plan to purchase and order totals."
+      />
       {cart.lines.map((line) => (
         <CartLineRow
           key={line.productId}
@@ -62,9 +74,15 @@ export function CartPanel({
           onRemove={() => onRemove(line.productId)}
         />
       ))}
-      <View style={styles.totals}>
+      <View
+        style={styles.totals}
+        accessibilityRole="none"
+        accessibilityLabel="Order summary"
+      >
         <View style={styles.row}>
-          <AppText variant="body">Subtotal</AppText>
+          <AppText variant="body" accessibilityLabel="Subtotal before discounts">
+            Subtotal
+          </AppText>
           <MoneyText cents={cart.subtotalCents} />
         </View>
         {cart.appliedDiscounts.map((d) => (
@@ -78,12 +96,15 @@ export function CartPanel({
           </View>
         ))}
         <View style={[styles.row, styles.boldRow]}>
-          <AppText variant="subtitle">Total</AppText>
+          <AppText variant="subtitle" accessibilityLabel="Total to pay">
+            Total
+          </AppText>
           <MoneyText cents={cart.totalCents} variant="subtitle" />
         </View>
       </View>
       <PrimaryButton
         title="Checkout"
+        accessibilityHint="Go to checkout to review and place your order."
         onPress={onCheckout}
         disabled={busy}
         loading={busy}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from '../../lib/rn';
 import { colors, radius, space } from '../../theme/tokens';
 import { AppText } from '../atoms/AppText';
 
@@ -9,20 +9,26 @@ export function QuantityStepper({
   max,
   onChange,
   disabled,
+  a11yItemName,
 }: {
   value: number;
   min: number;
   max: number;
   onChange: (n: number) => void;
   disabled?: boolean;
+  /** Product or line name for clearer VoiceOver labels. */
+  a11yItemName?: string;
 }): React.ReactElement {
   const dec = () => onChange(Math.max(min, value - 1));
   const inc = () => onChange(Math.min(max, value + 1));
+  const focusName = a11yItemName ?? 'this item';
   return (
-    <View style={styles.row}>
+    <View style={styles.row} accessibilityRole="none">
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Decrease quantity"
+        accessibilityLabel={`Decrease quantity for ${focusName}. Current quantity ${value}.`}
+        accessibilityHint="Subtracts one from the number of items."
+        accessibilityState={{ disabled: !!(disabled || value <= min) }}
         onPress={dec}
         disabled={disabled || value <= min}
         style={[
@@ -32,12 +38,19 @@ export function QuantityStepper({
       >
         <AppText variant="subtitle">−</AppText>
       </Pressable>
-      <AppText variant="subtitle" style={styles.val}>
+      <AppText
+        variant="subtitle"
+        style={styles.val}
+        accessibilityRole="text"
+        accessibilityLabel={`Quantity ${value}`}
+      >
         {value}
       </AppText>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Increase quantity"
+        accessibilityLabel={`Increase quantity for ${focusName}. Current quantity ${value}.`}
+        accessibilityHint="Adds one more item, up to the maximum you can order."
+        accessibilityState={{ disabled: !!(disabled || value >= max) }}
         onPress={inc}
         disabled={disabled || value >= max}
         style={[

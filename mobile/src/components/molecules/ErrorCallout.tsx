@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from '../../lib/rn';
 import { colors, radius, space } from '../../theme/tokens';
 import { AppText } from '../atoms/AppText';
 
@@ -15,6 +15,7 @@ export function ErrorCallout({
       style={styles.wrap}
       accessibilityRole="alert"
       accessibilityLiveRegion="polite"
+      accessibilityLabel={message}
     >
       <AppText variant="error" style={styles.text}>
         {message}
@@ -23,6 +24,7 @@ export function ErrorCallout({
         <AppText
           accessibilityRole="button"
           accessibilityLabel="Dismiss error"
+          accessibilityHint="Hides this alert message."
           onPress={onDismiss}
           variant="caption"
           style={styles.dismiss}
