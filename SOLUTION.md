@@ -100,21 +100,30 @@ npm run test:e2e
 
 ## Discount engine (BFF)
 
-Seed rules live in `bff/src/discounts/seeds/discount.seed.ts`. Types are documented in `bff/src/discounts/domain/discount.types.ts`.
+**Where it lives:** seeds in `bff/src/discounts/seeds/discount.seed.ts`, rule shapes in `bff/src/discounts/domain/discount.types.ts`.
 
-Applied **automatically at checkout** (and mirrored in cart totals) in this order:
+**Rule kinds:** bulk discount on a line (min quantity), percent off the order above a spend threshold, or a fixed £ off the order (fixed £ is implemented but **not** in the seed data).
 
-1. **LINE_QTY_PERCENT** — “Bulk snack deal”: 15% off any line with quantity ≥ 3 (applied per eligible line).
-2. **FIXED_CENTS** — “£5 off £40+” when subtotal (after line discounts) meets the threshold.
-3. **PERCENT_OFF** — “10% off £30+” on the remaining subtotal after the fixed step.
+**What’s seeded (all active):**
 
-Discount reductions are allocated across lines pro-rata so line totals reconcile to the order total.
+- Bulk snack — 15% off any line with 3+ of the same item.
+- 10% off the order once the cart (after bulk discounts) is at least £30.
+- 15% off the order once the cart is at least £40.
+
+**API:** `GET /discounts` lists active rules only. `GET /discounts/:id` loads one; missing or inactive returns 404.
+
+**How prices are calculated** (same logic on cart preview and checkout):
+
+1. Apply the **bulk line** rule first (if present), using the first matching rule in the seed file.
+2. Apply **one** order-level rule: only the **highest spend band** that still qualifies counts (e.g. at £40+ you get the £40 deal, not the £30 deal). If several rules share that band, the biggest saving wins; ties use seed order.
+
+Discount amounts are **split across lines in proportion** to each line’s share of the subtotal so everything adds up.
 
 ## Data & assumptions
 
 - **No database**: all product/discount seed data and cart state are **in-memory** in the BFF process. Restarting the BFF resets catalogue stock to seed values and wipes carts.
 - **Stock reservations**: quantity in a cart reserves units. `availableStock` on product APIs means “units not already reserved by **any** cart.”
-- **Cart inactivity**: if there is **no cart activity for 2 minutes** (no successful mutating cart API call), a background sweep **deletes the cart server-side** and **releases** its reservations. The mobile client treats a subsequent **410** on `GET /carts/:id` as “expired” and starts a new cart.
+- **Cart inactivity**: if there is **no cart activity for 2 minutes** (no successful call that **bumps** `lastActivityAt`—including `GET /carts/:id`, which **refreshes** the timer), a background sweep **deletes the cart server-side** and **releases** its reservations. **`GET /carts/:id/status`** returns the same snapshot but **does not** refresh the timer, so the app can poll it (about every 10s + when returning to foreground) and treat **410** as “expired” without keeping the session alive. Any **410** on a normal cart fetch triggers the same recovery: start a new cart and surface the message to the user.
 - **Checkout failure** (e.g. stock no longer sufficient): the BFF **releases** that cart’s reservations and removes the cart; the app starts a fresh cart and shows the error message from the API.
 - **No auth** (per exercise brief).
 
