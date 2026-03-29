@@ -48,9 +48,16 @@ export function ProductDetailPanel({
         accessibilityHint="Name of the product you are viewing."
       />
       <MoneyText cents={product.priceCents} variant="title" />
-      <View style={styles.gap}>
-        <StockBadge available={product.availableStock} />
-      </View>
+      <SectionHeader
+        title="Stock"
+        right={
+          <StockBadge
+            available={product.availableStock}
+            showExactCount
+          />
+        }
+        accessibilityHint="How many units are available to purchase."
+      />
       <AppText variant="body" style={styles.desc}>
         {product.description}
       </AppText>
@@ -94,7 +101,6 @@ export function ProductDetailPanel({
 
 const styles = StyleSheet.create({
   wrap: { gap: space.md },
-  gap: { marginTop: space.sm },
   desc: { marginTop: space.sm },
   btn: { marginTop: space.lg },
 });

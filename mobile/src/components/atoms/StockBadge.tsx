@@ -5,8 +5,11 @@ import { AppText } from './AppText';
 
 export function StockBadge({
   available,
+  showExactCount = false,
 }: {
   available: number;
+  /** When true, high stock shows a numeric count (e.g. for product detail). */
+  showExactCount?: boolean;
 }): React.ReactElement {
   const ok = available > 5;
   const low = available > 0 && available <= 5;
@@ -15,7 +18,9 @@ export function StockBadge({
       ? 'Out of stock'
       : low
         ? `${available} left`
-        : 'In stock';
+        : showExactCount
+          ? `${available} in stock`
+          : 'In stock';
   const hint =
     available <= 0
       ? 'This item cannot be added to your cart until stock is available.'

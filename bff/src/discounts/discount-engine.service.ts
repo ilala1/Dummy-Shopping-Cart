@@ -9,10 +9,15 @@ import {
 import { DISCOUNT_SEED } from './seeds/discount.seed';
 
 /**
- * Applies all eligible discounts from the catalogue in a fixed order:
+ * Applies discounts in two phases:
  * 1) Line-qty percentage (per qualifying line)
- * 2) Fixed amount off subtotal (after line discounts)
- * 3) Order percentage off remaining (after fixed)
+ * 2) Exactly one order-level rule among {@link DiscountType.FIXED_CENTS} and
+ *    {@link DiscountType.PERCENT_OFF}: first take every rule whose
+ *    `minSubtotalCents` is met, then keep only rules in the **strictest** tier
+ *    (highest `minSubtotalCents` among those). Among that tier, pick the best
+ *    savings; ties break by catalogue order.
+ *
+ *    So £40+ and £30+ never stack: above £40 only the £40-tier promo can run.
  */
 @Injectable()
 export class DiscountEngineService {
@@ -66,47 +71,15 @@ export class DiscountEngineService {
       0,
     );
 
-    const fixedRule = this.discounts.find(
-      (d) =>
-        d.active &&
-        d.type === DiscountType.FIXED_CENTS &&
-        d.valueCents != null &&
-        (d.minSubtotalCents ?? 0) <= subtotalAfterLine,
-    );
-    if (fixedRule?.valueCents) {
-      const amt = Math.min(fixedRule.valueCents, subtotalAfterLine);
+    const bestOrder = this.pickBestOrderLevelDiscount(subtotalAfterLine);
+    if (bestOrder && bestOrder.amountCents > 0) {
+      const { rule, amountCents } = bestOrder;
       applied.push({
-        discountId: fixedRule.id,
-        name: fixedRule.name,
-        amountCents: amt,
+        discountId: rule.id,
+        name: rule.name,
+        amountCents,
       });
-      runningLines = this.allocateLineDiscount(runningLines, amt);
-    }
-
-    const subtotalAfterFixed = runningLines.reduce(
-      (s, r) => s + r.lineSubtotalCents,
-      0,
-    );
-
-    const pctRule = this.discounts.find(
-      (d) =>
-        d.active &&
-        d.type === DiscountType.PERCENT_OFF &&
-        d.valuePercent != null &&
-        (d.minSubtotalCents ?? 0) <= subtotalAfterFixed,
-    );
-    if (pctRule?.valuePercent) {
-      const amt = Math.round(
-        (subtotalAfterFixed * pctRule.valuePercent) / 100,
-      );
-      if (amt > 0) {
-        applied.push({
-          discountId: pctRule.id,
-          name: pctRule.name,
-          amountCents: amt,
-        });
-        runningLines = this.allocateLineDiscount(runningLines, amt);
-      }
+      runningLines = this.allocateLineDiscount(runningLines, amountCents);
     }
 
     const subtotalCents = lines.reduce(
@@ -119,6 +92,61 @@ export class DiscountEngineService {
     );
 
     return { subtotalCents, applied, totalCents };
+  }
+
+  private pickBestOrderLevelDiscount(
+    subtotalCents: number,
+  ): { rule: DiscountRecord; amountCents: number } | null {
+    type Entry = {
+      rule: DiscountRecord;
+      amountCents: number;
+      index: number;
+    };
+    const eligible: Entry[] = [];
+
+    for (let i = 0; i < this.discounts.length; i++) {
+      const d = this.discounts[i];
+      if (!d.active) continue;
+      if (
+        d.type !== DiscountType.FIXED_CENTS &&
+        d.type !== DiscountType.PERCENT_OFF
+      ) {
+        continue;
+      }
+      if ((d.minSubtotalCents ?? 0) > subtotalCents) continue;
+
+      let amount = 0;
+      if (d.type === DiscountType.FIXED_CENTS && d.valueCents != null) {
+        amount = Math.min(d.valueCents, subtotalCents);
+      } else if (d.type === DiscountType.PERCENT_OFF && d.valuePercent != null) {
+        amount = Math.round((subtotalCents * d.valuePercent) / 100);
+      }
+      if (amount <= 0) continue;
+
+      eligible.push({ rule: d, amountCents: amount, index: i });
+    }
+
+    if (eligible.length === 0) return null;
+
+    const maxMin = Math.max(
+      ...eligible.map((e) => e.rule.minSubtotalCents ?? 0),
+    );
+    const topTier = eligible.filter(
+      (e) => (e.rule.minSubtotalCents ?? 0) === maxMin,
+    );
+
+    let best = topTier[0];
+    for (let k = 1; k < topTier.length; k++) {
+      const e = topTier[k];
+      if (
+        e.amountCents > best.amountCents ||
+        (e.amountCents === best.amountCents && e.index < best.index)
+      ) {
+        best = e;
+      }
+    }
+
+    return { rule: best.rule, amountCents: best.amountCents };
   }
 
   /**

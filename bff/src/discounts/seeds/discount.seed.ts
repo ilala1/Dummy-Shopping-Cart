@@ -2,11 +2,11 @@ import { DiscountRecord, DiscountType } from '../domain/discount.types';
 
 export const DISCOUNT_SEED: DiscountRecord[] = [
   {
-    id: 'disc-spend-40-off-5',
-    name: '£5 off £40+',
-    description: 'Fixed £5 off when your cart subtotal reaches £40 or more.',
-    type: DiscountType.FIXED_CENTS,
-    valueCents: 500,
+    id: 'disc-15pct-40plus',
+    name: '15% off £40+',
+    description: 'Fifteen percent off when your cart subtotal reaches £40 or more.',
+    type: DiscountType.PERCENT_OFF,
+    valuePercent: 15,
     minSubtotalCents: 4000,
     active: true,
   },
