@@ -11,6 +11,12 @@ export class CartsController {
     return this.carts.createCart();
   }
 
+  /** Poll without extending the inactivity deadline (see CartsService.peekSnapshot). */
+  @Get(':cartId/status')
+  getStatus(@Param('cartId') cartId: string) {
+    return this.carts.peekSnapshot(cartId);
+  }
+
   @Get(':cartId')
   getOne(@Param('cartId') cartId: string) {
     return this.carts.snapshot(cartId);

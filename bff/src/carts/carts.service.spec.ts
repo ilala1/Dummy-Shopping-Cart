@@ -65,4 +65,22 @@ describe('CartsService', () => {
     expect(inventory.reservedForProduct('p1')).toBe(0);
     jest.useRealTimers();
   });
+
+  it('peekSnapshot does not extend last activity', () => {
+    const { id } = carts.createCart();
+    carts.setLine(id, 'p1', 2);
+    const v = carts as unknown as { carts: Map<string, { lastActivityAt: number }> };
+    const t0 = v.carts.get(id)!.lastActivityAt;
+    carts.peekSnapshot(id);
+    expect(v.carts.get(id)!.lastActivityAt).toBe(t0);
+  });
+
+  it('peekSnapshot releases and throws when cart is past inactivity window', () => {
+    const { id } = carts.createCart();
+    carts.setLine(id, 'p1', 2);
+    const v = carts as unknown as { carts: Map<string, { lastActivityAt: number }> };
+    v.carts.get(id)!.lastActivityAt = Date.now() - 3 * 60 * 1000;
+    expect(() => carts.peekSnapshot(id)).toThrow(GoneException);
+    expect(inventory.reservedForProduct('p1')).toBe(0);
+  });
 });

@@ -33,6 +33,28 @@ export class CartsService {
   snapshot(cartId: string): CartSnapshotResponse {
     this.assertActiveCart(cartId);
     this.touch(cartId);
+    return this.buildSnapshot(cartId);
+  }
+
+  /**
+   * Read-only snapshot for polling: does not refresh last-activity, but returns 410 and
+   * releases reservations once the cart is past the inactivity window (same as purge).
+   */
+  peekSnapshot(cartId: string, now = Date.now()): CartSnapshotResponse {
+    this.assertActiveCart(cartId);
+    const meta = this.carts.get(cartId)!;
+    if (now - meta.lastActivityAt >= INACTIVITY_MS) {
+      this.inventory.releaseCart(cartId);
+      this.carts.delete(cartId);
+      throw new GoneException({
+        code: 'CART_EXPIRED',
+        message: 'This cart expired after inactivity; start a new cart.',
+      });
+    }
+    return this.buildSnapshot(cartId);
+  }
+
+  private buildSnapshot(cartId: string): CartSnapshotResponse {
     const linesMap = this.inventory.getCartLines(cartId);
     const lines: CartSnapshotResponse['lines'] = [];
     for (const [productId, quantity] of linesMap) {

@@ -7,10 +7,13 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { AppState } from 'react-native';
 import { api, BffApiError } from '../api/bffClient';
 import type { CartSnapshot, CheckoutSuccess } from '../api/types';
 
 const STORAGE_KEY = 'shop_cart_id';
+/** Align with bff/src/carts/cart-inactivity.service.ts sweep interval. */
+const CART_PEEK_INTERVAL_MS = 10_000;
 
 type ShopSessionContextValue = {
   cartId: string | null;
@@ -50,6 +53,19 @@ export function ShopSessionProvider({
     }
   }, []);
 
+  const recoverAfterServerExpiredCart = useCallback(async () => {
+    await persistCartId(null);
+    setCart(null);
+    const created = await api.createCart();
+    setCartId(created.id);
+    await persistCartId(created.id);
+    const snap = await api.getCart(created.id);
+    setCart(snap);
+    setLastError(
+      'Your cart expired on the server after inactivity. Started a new cart.',
+    );
+  }, [persistCartId]);
+
   const refreshCart = useCallback(async () => {
     if (!cartId) {
       setCart(null);
@@ -60,21 +76,24 @@ export function ShopSessionProvider({
       setCart(snap);
     } catch (e) {
       if (e instanceof BffApiError && e.status === 410) {
-        await persistCartId(null);
-        setCart(null);
-        const created = await api.createCart();
-        setCartId(created.id);
-        await persistCartId(created.id);
-        const snap = await api.getCart(created.id);
-        setCart(snap);
-        setLastError(
-          'Your cart expired on the server after inactivity. Started a new cart.',
-        );
+        await recoverAfterServerExpiredCart();
         return;
       }
       throw e;
     }
-  }, [cartId, persistCartId]);
+  }, [cartId, recoverAfterServerExpiredCart]);
+
+  const peekCartFromServer = useCallback(async () => {
+    if (!cartId) return;
+    try {
+      const snap = await api.peekCart(cartId);
+      setCart(snap);
+    } catch (e) {
+      if (e instanceof BffApiError && e.status === 410) {
+        await recoverAfterServerExpiredCart();
+      }
+    }
+  }, [cartId, recoverAfterServerExpiredCart]);
 
   const resetSession = useCallback(async () => {
     setBusy(true);
@@ -130,6 +149,21 @@ export function ShopSessionProvider({
       setLastError(e instanceof Error ? e.message : 'Failed to load cart.');
     });
   }, [ready, cartId, refreshCart]);
+
+  useEffect(() => {
+    if (!ready || !cartId) return;
+    const tick = () => {
+      void peekCartFromServer();
+    };
+    const id = setInterval(tick, CART_PEEK_INTERVAL_MS);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') tick();
+    });
+    return () => {
+      clearInterval(id);
+      sub.remove();
+    };
+  }, [ready, cartId, peekCartFromServer]);
 
   const addOrUpdateLine = useCallback(
     async (productId: string, quantity: number) => {

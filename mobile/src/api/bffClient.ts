@@ -75,6 +75,12 @@ export const api = {
   getCart: (cartId: string) =>
     bffFetch<CartSnapshot>(`/carts/${encodeURIComponent(cartId)}`),
 
+  /** Does not refresh the cart idle timer on the server; use for expiry polling. */
+  peekCart: (cartId: string) =>
+    bffFetch<CartSnapshot>(
+      `/carts/${encodeURIComponent(cartId)}/status`,
+    ),
+
   setLine: (cartId: string, productId: string, quantity: number) =>
     bffFetch<CartSnapshot>(
       `/carts/${encodeURIComponent(cartId)}/items`,
