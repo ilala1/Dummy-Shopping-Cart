@@ -1,25 +1,35 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import React, { useState } from 'react';
-import { StyleSheet, View } from '../lib/rn';
-import type { CheckoutSuccess } from '../api/types';
-import { BffApiError } from '../api/bffClient';
-import { ScreenContainer } from '../components/atoms/ScreenContainer';
-import { AppText } from '../components/atoms/AppText';
-import { MoneyText } from '../components/atoms/MoneyText';
-import { PrimaryButton } from '../components/atoms/PrimaryButton';
-import { ErrorCallout } from '../components/molecules/ErrorCallout';
-import { SectionHeader } from '../components/molecules/SectionHeader';
-import { useShopSession } from '../context/ShopSessionContext';
-import { formatCents } from '../lib/money';
-import { colors, space } from '../theme/tokens';
-import type { RootStackParamList } from '../navigation/types';
+import React from 'react';
+import { StyleSheet, View } from '../../lib/rn';
+import type { CheckoutSuccess } from '../../api/types';
+import { AppText } from '../../components/atoms/AppText';
+import { MoneyText } from '../../components/atoms/MoneyText';
+import { PrimaryButton } from '../../components/atoms/PrimaryButton';
+import { ScreenContainer } from '../../components/atoms/ScreenContainer';
+import { ErrorCallout } from '../../components/molecules/ErrorCallout';
+import { SectionHeader } from '../../components/molecules/SectionHeader';
+import { formatCents } from '../../lib/money';
+import { colors, space } from '../../theme/tokens';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Checkout'>;
-
-export function CheckoutScreen({ navigation }: Props): React.ReactElement {
-  const { cart, checkout, busy } = useShopSession();
-  const [done, setDone] = useState<CheckoutSuccess | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function CheckoutScreenView(props: {
+  done: CheckoutSuccess | null;
+  error: string | null;
+  onDismissError: () => void;
+  canSubmit: boolean;
+  cartTotalCents: number;
+  busy: boolean;
+  onPlaceOrder: () => Promise<void>;
+  onBackToShop: () => void;
+}): React.ReactElement {
+  const {
+    done,
+    error,
+    onDismissError,
+    canSubmit,
+    cartTotalCents,
+    busy,
+    onPlaceOrder,
+    onBackToShop,
+  } = props;
 
   if (done) {
     return (
@@ -64,16 +74,12 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
         </View>
         <PrimaryButton
           title="Back to shop"
-          onPress={() => {
-            setDone(null);
-            navigation.navigate('Products');
-          }}
+          accessibilityHint="Returns to the product list."
+          onPress={onBackToShop}
         />
       </ScreenContainer>
     );
   }
-
-  const canSubmit = (cart?.lines.length ?? 0) > 0;
 
   return (
     <ScreenContainer scroll>
@@ -82,7 +88,7 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
         accessibilityHint="Review total and place your simulated order."
       />
       {error ? (
-        <ErrorCallout message={error} onDismiss={() => setError(null)} />
+        <ErrorCallout message={error} onDismiss={onDismissError} />
       ) : null}
       <AppText variant="body" style={{ marginBottom: space.md }}>
         Payment is simulated. We will place the order against the BFF using your
@@ -96,7 +102,7 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
         <View style={styles.block}>
           <View style={styles.line}>
             <AppText variant="body">Total due</AppText>
-            <MoneyText cents={cart?.totalCents ?? 0} variant="subtitle" />
+            <MoneyText cents={cartTotalCents} variant="subtitle" />
           </View>
         </View>
       )}
@@ -105,20 +111,8 @@ export function CheckoutScreen({ navigation }: Props): React.ReactElement {
         accessibilityHint="Submits the order using your current cart."
         loading={busy}
         disabled={!canSubmit || busy}
-        onPress={async () => {
-          setError(null);
-          try {
-            const order = await checkout();
-            setDone(order);
-          } catch (e) {
-            setError(
-              e instanceof BffApiError
-                ? e.message
-                : e instanceof Error
-                  ? e.message
-                  : 'Checkout failed.',
-            );
-          }
+        onPress={() => {
+          void onPlaceOrder();
         }}
       />
     </ScreenContainer>
